@@ -1,0 +1,173 @@
+---
+title: Advanced configuration
+description: Configure gateway URL, reconnection behavior, and logging settings
+---
+
+<Warning>
+  Do not change these configurations unless you know what you're doing. Incorrect settings may prevent the webhook from connecting or cause reconnection loops.
+</Warning>
+
+Advanced configuration options control the WebSocket gateway connection, reconnection behavior, and logging verbosity.
+
+## Gateway connection
+
+<ParamField path="gatewayURL" type="string" default="wss://api.mongoosee.com/solsstattracker/v2/gateway">
+  WebSocket gateway URL for Sol's Stat Tracker. The application connects to this gateway endpoint to receive stat notifications and status updates.
+  
+  The gateway authenticates connections using your API token in the WebSocket headers.
+  
+  **Default:** `wss://api.mongoosee.com/solsstattracker/v2/gateway`
+</ParamField>
+
+<Note>
+  You should only change the gateway URL if you're running a self-hosted instance of Sol's Stat Tracker or if the official gateway URL changes.
+</Note>
+
+## Reconnection settings
+
+Control how the application handles connection failures and reconnection attempts.
+
+<ParamField path="maxReconnectInterval" type="number" default="120000">
+  Maximum time (in milliseconds) to wait between reconnection attempts. The application uses exponential backoff, starting at 31 seconds and doubling after each failed attempt until reaching this maximum.
+  
+  When a connection closes unexpectedly, the reconnect interval increases: 31s → 62s → 124s → capped at `maxReconnectInterval`.
+  
+  **Default:** `120000` (2 minutes)
+</ParamField>
+
+<ParamField path="reconnectOnDuplicateConnection" type="boolean" default="false">
+  Whether to automatically reconnect when receiving a duplicate connection error (code 4003). 
+  
+  - **`false`** (recommended): Stop reconnection attempts when another client is already connected with your token
+  - **`true`**: Force reconnection attempts even with duplicate connection errors
+  
+  **Default:** `false`
+</ParamField>
+
+<Warning>
+  Setting `reconnectOnDuplicateConnection` to `true` may cause a reconnection loop if you have multiple clients running with the same token. Only enable this if you're intentionally trying to take over an existing connection.
+</Warning>
+
+### How reconnection works
+
+1. When the WebSocket connection closes, the application checks the close code
+2. For authentication errors (codes 4001, 4002, 4004), reconnection is disabled and the process stops
+3. For duplicate connection errors (code 4003), reconnection only occurs if `reconnectOnDuplicateConnection` is `true`
+4. For all other errors, the application waits for the current reconnect interval, then attempts to connect
+5. After each failed attempt, the interval doubles until reaching `maxReconnectInterval`
+6. On successful connection, the interval resets to 31 seconds
+
+<CodeGroup>
+```js Default reconnection
+const config = {
+    "maxReconnectInterval": 120000,
+    "reconnectOnDuplicateConnection": false,
+    // ...
+};
+```
+
+```js Faster reconnection
+const config = {
+    "maxReconnectInterval": 60000,  // Max 1 minute
+    "reconnectOnDuplicateConnection": false,
+    // ...
+};
+```
+
+```js Aggressive reconnection
+const config = {
+    "maxReconnectInterval": 120000,
+    "reconnectOnDuplicateConnection": true,  // Force reconnect on duplicate
+    // ...
+};
+```
+</CodeGroup>
+
+## Logging configuration
+
+<ParamField path="verboseLogging" type="boolean" default="true">
+  Controls whether automated status events are logged to console and sent to Discord.
+  
+  When **enabled** (`true`):
+  - Connection status (connected, reconnecting)
+  - Authentication errors (missing token, invalid token, token deleted, duplicate connection)
+  - All messages logged to console
+  - Status embeds sent to Discord webhook
+  
+  When **disabled** (`false`):
+  - Only user-triggered events are logged (enabled, disabled, stat notifications)
+  - Automated connection events are not sent to Discord
+  - Error messages still appear in console
+  
+  **Default:** `true`
+</ParamField>
+
+### Messages affected by verbose logging
+
+| Message | Sent when `verboseLogging` is true | Sent when `verboseLogging` is false |
+|---------|-----------------------------------|-------------------------------------|
+| Connected | Yes | No |
+| Reconnecting | Yes | No |
+| Missing token error | Yes | No |
+| Invalid token error | Yes | No |
+| Token deleted error | Yes | No |
+| Duplicate connection error | Yes | No |
+| Enabled (via Discord bot) | Always | Always |
+| Disabled (via Discord bot) | Always | Always |
+| Stat notifications | Always | Always |
+
+<CodeGroup>
+```js Verbose logging enabled
+const config = {
+    "verboseLogging": true,  // Show all status updates
+    // ...
+};
+```
+
+```js Quiet mode
+const config = {
+    "verboseLogging": false,  // Only show user events
+    // ...
+};
+```
+</CodeGroup>
+
+<Note>
+  Console logs always show all events regardless of the `verboseLogging` setting. This setting only affects which messages are sent to your Discord webhook.
+</Note>
+
+## Complete advanced configuration example
+
+<CodeGroup>
+```js config.js
+const config = {
+    // AUTHENTICATION (REQUIRED)
+    "token": "YOUR_API_TOKEN_HERE",
+    "webhookURL": "YOUR_WEBHOOK_URL_HERE",
+
+    // WEBHOOK USER (OPTIONAL)
+    "overrideUsername": null,
+    "overrideAvatarURL": null,
+
+    "colors": {
+        "success": "#6ab183",
+        "error": "#d85a4b",
+        "none": "#777f8d"
+    },
+
+    "emojis": {
+        "success": "<:green_tick:1365702693326422026>",
+        "error": "<:red_tick:1365702694727188491>",
+        "none": "<:gray_tick:1365702690985738390>"
+    },
+
+    // ADVANCED CONFIGURATION (OPTIONAL)
+    "gatewayURL": "wss://api.mongoosee.com/solsstattracker/v2/gateway",
+    "maxReconnectInterval": 120000,
+    "reconnectOnDuplicateConnection": false,
+    "verboseLogging": true
+};
+
+module.exports = config;
+```
+</CodeGroup>

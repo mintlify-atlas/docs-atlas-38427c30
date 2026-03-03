@@ -1,0 +1,267 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for Sol's Stat Tracker Webhook
+---
+
+## Error codes
+
+When the WebSocket connection closes with an error code, the application logs it to the console. Below are the error codes you may encounter and how to resolve them.
+
+<Accordion title="Code 4001: API token is missing">
+  **Cause**: The `token` field in your `config.js` file is empty or not set.
+
+  **Console output**:
+  ```
+  ID: 1234567890123456 | WS client disconnected: Code 4001
+  The API token is missing.
+  ```
+
+  **Solution**:
+  1. Open your `config.js` file
+  2. Verify the `token` field contains your API token
+  3. If empty, generate a new token using the `/generatetoken` command in Discord
+  4. Save the file and restart the application
+
+  <Warning>
+  The application will **not** attempt to reconnect after this error. You must fix the configuration and restart manually (index.js:86-97).
+  </Warning>
+</Accordion>
+
+<Accordion title="Code 4002: API token is invalid">
+  **Cause**: The token you provided is malformed or does not match the expected format.
+
+  **Console output**:
+  ```
+  ID: 1234567890123456 | WS client disconnected: Code 4002
+  The API token is invalid.
+  ```
+
+  **Solution**:
+  1. Open your `config.js` file
+  2. Check that you copied the entire token without extra spaces or characters
+  3. Generate a fresh token using `/generatetoken` in Discord
+  4. Replace the token in `config.js`
+  5. Save and restart the application
+
+  <Warning>
+  The application will **not** attempt to reconnect after this error. You must fix the configuration and restart manually (index.js:99-110).
+  </Warning>
+</Accordion>
+
+<Accordion title="Code 4003: API token already in-use">
+  **Cause**: Another instance of the webhook client is already connected using the same API token.
+
+  **Console output**:
+  ```
+  ID: 1234567890123456 | WS client disconnected: Code 4003
+  The API token is already in-use.
+  ```
+
+  **Solution**:
+  - **Option 1**: Close the other running instance of the webhook client
+  - **Option 2**: Generate a new API token for this instance using `/generatetoken`
+  - **Option 3**: If you set `reconnectOnDuplicateConnection: true`, the client will attempt to reconnect and force-disconnect the other instance
+
+  <Warning>
+  Setting `reconnectOnDuplicateConnection: true` may cause a reconnection loop if you have multiple instances fighting for the same connection (index.js:125-136).
+  </Warning>
+
+  <Info>
+  By default, the application does **not** reconnect on duplicate connection errors (index.js:136).
+  </Info>
+</Accordion>
+
+<Accordion title="Code 4004: API token has been deleted">
+  **Cause**: The API token you're using has been deleted from Sol's Stat Tracker.
+
+  **Console output**:
+  ```
+  ID: 1234567890123456 | WS client disconnected: Code 4004
+  The API token has been deleted.
+  ```
+
+  **Solution**:
+  1. Generate a new API token using the `/generatetoken` command in Discord
+  2. Update the `token` field in your `config.js` file
+  3. Save and restart the application
+
+  <Warning>
+  The application will **not** attempt to reconnect after this error. You must fix the configuration and restart manually (index.js:112-123).
+  </Warning>
+</Accordion>
+
+<Accordion title="Code 1006 or other codes: Unexpected disconnection">
+  **Cause**: Network issues, server maintenance, or other temporary problems.
+
+  **Console output**:
+  ```
+  ID: 1234567890123456 | WS client disconnected: Code 1006
+  ID: 1234567890123456 | Reconnecting WS client in 31000ms...
+  ```
+
+  **Solution**:
+  The application automatically handles these errors with exponential backoff reconnection:
+  - First retry after 31 seconds
+  - Each subsequent retry doubles the interval (62s, 124s, etc.)
+  - Maximum retry interval is 120 seconds (configurable via `maxReconnectInterval`)
+
+  <Info>
+  No action is required. The client will automatically reconnect when the connection is restored (index.js:138-151).
+  </Info>
+
+  If reconnection continues to fail:
+  1. Check your internet connection
+  2. Verify the gateway URL is correct in `config.js`
+  3. Check if Sol's Stat Tracker service is experiencing downtime
+</Accordion>
+
+## Webhook errors
+
+<Accordion title="Webhook client error">
+  **Cause**: Issues with the Discord webhook, such as an invalid webhook URL or the webhook being deleted.
+
+  **Console output**:
+  ```
+  ID: 1234567890123456 | Webhook client error: Unknown Webhook
+  ```
+
+  **Solution**:
+  1. Verify the webhook still exists in your Discord server
+  2. If deleted, create a new webhook and update `webhookURL` in `config.js`
+  3. Ensure you copied the complete webhook URL including the token
+  4. Check that the webhook URL format is: `https://discord.com/api/webhooks/ID/TOKEN`
+
+  <Note>
+  Webhook errors are handled by the Discord.js library (index.js:20-22).
+  </Note>
+</Accordion>
+
+<Accordion title="WS client message error">
+  **Cause**: The WebSocket received malformed data that couldn't be parsed as JSON.
+
+  **Console output**:
+  ```
+  ID: 1234567890123456 | WS client message error: Unexpected token
+  ```
+
+  **Solution**:
+  This is typically a server-side issue. The application will:
+  - Log the error to the console
+  - Continue running and processing subsequent messages
+  - Not require any action from you
+
+  <Info>
+  Message parsing errors are caught and logged without terminating the connection (index.js:76-78).
+  </Info>
+</Accordion>
+
+<Accordion title="Invalid action received">
+  **Cause**: The WebSocket received a message with an unrecognized `action` field.
+
+  **Console output**:
+  ```
+  ID: 1234567890123456 | WS client invalid action: unknownAction
+  ```
+
+  **Solution**:
+  This usually indicates:
+  - A new action type was added to the server that your client version doesn't support
+  - The server sent corrupted data
+
+  **Steps to resolve**:
+  1. Check for updates to Sol's Stat Tracker Webhook
+  2. Download and install the latest release if available
+  3. If the issue persists, report it to the developer
+
+  <Info>
+  The application continues running after logging invalid actions (index.js:72-74).
+  </Info>
+</Accordion>
+
+## Connection issues
+
+<Accordion title="Application won't start">
+  **Symptoms**: The application closes immediately or shows a Node.js error.
+
+  **Common causes and solutions**:
+
+  **1. Node.js not installed**
+  - Download and install [Node.js](https://nodejs.org/en)
+  - Restart your computer after installation
+  - Try running `run.bat` again
+
+  **2. Dependencies not installed**
+  - Run `setup.bat` to install required packages
+  - Wait for the installation to complete
+  - Then run `run.bat`
+
+  **3. config.js syntax error**
+  - Open `config.js` and check for missing commas, quotes, or brackets
+  - Compare your config against the example in the README
+  - Ensure all strings are properly quoted
+</Accordion>
+
+<Accordion title="No console output after starting">
+  **Cause**: The application may be running but not logging events.
+
+  **Solution**:
+  1. Check if `verboseLogging` is set to `false` in your `config.js`
+  2. If you want to see connection events, set `verboseLogging: true`
+  3. Save and restart the application
+
+  <Note>
+  User events (enabled/disabled status, webhook executions) are logged regardless of the `verboseLogging` setting (index.js:40-41).
+  </Note>
+</Accordion>
+
+<Accordion title="Reconnection loop">
+  **Symptoms**: The application continuously disconnects and reconnects.
+
+  **Possible causes**:
+
+  **1. Duplicate connection with reconnectOnDuplicateConnection enabled**
+  - Set `reconnectOnDuplicateConnection: false` in `config.js`
+  - Close any other instances of the webhook client
+  - Restart the application
+
+  **2. Unstable internet connection**
+  - Check your network stability
+  - Try connecting from a different network
+  - Contact your ISP if issues persist
+
+  **3. Server-side issues**
+  - Wait for the reconnection interval to stabilize (up to 2 minutes)
+  - Check Sol's Stat Tracker status/announcements
+  - Report persistent issues to the developer
+</Accordion>
+
+<Accordion title="Messages not appearing in Discord">
+  **Cause**: Webhook configuration issue or permissions problem.
+
+  **Solution**:
+  1. Verify the webhook URL is correct in `config.js`
+  2. Check that the webhook has permission to post in the target channel
+  3. Test the webhook by using `/enablestattracker` in Discord
+  4. Look for webhook errors in the console output
+  5. Ensure Sol's Stat Tracker is properly configured to use your token
+
+  <Warning>
+  All webhook messages have mentions disabled for security (index.js:68). If you need mentions, this is a built-in limitation.
+  </Warning>
+</Accordion>
+
+## Getting help
+
+If you continue to experience issues after trying the solutions above:
+
+1. Check the console output for specific error messages
+2. Note the error code or message text
+3. Verify your configuration matches the examples in the README
+4. Contact the developer (@mongoo.se) with:
+   - The error code or message
+   - Your console output (remove sensitive tokens)
+   - Steps you've already tried
+
+<Info>
+The application logs all important events with the webhook ID prefix (e.g., `ID: 1234567890123456`) to help with debugging (index.js:21, 32, 73, 77, 83, 139, 155).
+</Info>

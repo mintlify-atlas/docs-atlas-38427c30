@@ -1,0 +1,75 @@
+---
+title: Authentication
+description: Configure your API token and Discord webhook for Sol's Stat Tracker
+---
+
+To connect to Sol's Stat Tracker, you need to configure two required authentication fields in your `config.js` file.
+
+## Required configuration
+
+<ParamField path="token" type="string" required>
+  Your Sol's Stat Tracker API token. Generate this token using the `/generatetoken` command in the Sol's Stat Tracker Discord bot.
+  
+  The token must be a valid 72-character hexadecimal string. The WebSocket gateway authenticates your connection using this token in the request headers.
+</ParamField>
+
+<ParamField path="webhookURL" type="string" required>
+  Your Discord webhook URL where stat notifications will be posted. Create a webhook in your Discord server channel settings and copy the full URL.
+  
+  The webhook client uses this URL to establish a connection and send embed messages to your Discord channel.
+</ParamField>
+
+## Setup steps
+
+1. **Generate an API token**
+   
+   In Discord, use the Sol's Stat Tracker bot to generate your token:
+   ```
+   /generatetoken
+   ```
+   
+   Copy the token provided by the bot.
+
+2. **Create a Discord webhook**
+   
+   - Navigate to your Discord server channel settings
+   - Go to Integrations > Webhooks
+   - Click "New Webhook" or "Create Webhook"
+   - Copy the webhook URL
+
+3. **Configure your credentials**
+   
+   Open `config.js` and add your credentials:
+   
+   <CodeGroup>
+   ```js config.js
+   const config = {
+       // AUTHENTICATION (REQUIRED)
+       "token": "0123456789ABCDEFabcdef0123456789ABCDEFabcdef0123456789ABCDEFabcdef01234567",
+       "webhookURL": "https://discord.com/api/webhooks/123456789012345678/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcdef",
+       
+       // ... other configuration options
+   };
+   ```
+   </CodeGroup>
+
+<Warning>
+  Keep your API token and webhook URL private. Anyone with access to these credentials can post messages to your Discord channel or connect to your stat tracker.
+</Warning>
+
+## Authentication errors
+
+The WebSocket client validates your authentication and may disconnect with specific error codes:
+
+| Code | Error | Description |
+|------|-------|-------------|
+| 4001 | Missing token | The `token` field is empty or not provided |
+| 4002 | Invalid token | The token format is incorrect or not recognized |
+| 4003 | Already in use | Another client is already connected with this token |
+| 4004 | Token deleted | Your API token has been deleted from the system |
+
+When authentication errors occur (codes 4001, 4002, 4004), the client will not attempt to reconnect automatically. You must fix the authentication issue and restart the application.
+
+<Note>
+  If you encounter code 4003 (duplicate connection), only one client can be connected per token at a time. Close any other running instances before connecting again.
+</Note>

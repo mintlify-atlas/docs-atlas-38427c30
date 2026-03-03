@@ -1,0 +1,98 @@
+---
+title: Running the application
+description: Learn how to start and run Sol's Stat Tracker Webhook
+---
+
+## Starting the application
+
+To start the webhook client, simply run the `run.bat` file located in your installation directory. This batch file executes `node .` to start the application.
+
+<Note>
+Make sure you've completed the setup process and installed all dependencies using `setup.bat` before running the application for the first time.
+</Note>
+
+## Connection process
+
+When you start the application, the webhook client establishes a WebSocket connection to the Sol's Stat Tracker gateway at `wss://api.mongoosee.com/solsstattracker/v2/gateway`.
+
+### What happens on connection
+
+1. **WebSocket initialization**: The client creates a WebSocket connection with your API token in the headers (index.js:25-29)
+2. **Connection confirmation**: Once connected, you'll see a console message indicating the connection was successful
+3. **Status embed**: After 1 second, if `verboseLogging` is enabled, a "Connected" embed is sent to your Discord webhook (index.js:35-43)
+
+### Example console output
+
+When the application successfully connects, you'll see output similar to:
+
+```
+ID: 1234567890123456 | WS client connected: wss://api.mongoosee.com/solsstattracker/v2/gateway
+```
+
+The ID shown is your Discord webhook's unique identifier.
+
+## Reconnection behavior
+
+The application includes automatic reconnection logic to handle temporary connection issues:
+
+### Reconnection intervals
+
+- **Initial reconnect delay**: 31 seconds (index.js:14)
+- **Exponential backoff**: Each failed reconnection doubles the wait time
+- **Maximum interval**: 120 seconds (2 minutes) by default, configurable via `maxReconnectInterval` (index.js:37)
+
+<Info>
+When a connection is established successfully, the reconnection interval resets back to 31 seconds (index.js:33).
+</Info>
+
+### Reconnection triggers
+
+The client automatically attempts to reconnect when:
+
+- The WebSocket connection closes unexpectedly
+- A network error occurs
+- The server terminates the connection (except for authentication errors)
+
+### Reconnection console output
+
+When reconnecting, you'll see messages like:
+
+```
+ID: 1234567890123456 | WS client disconnected: Code 1006
+ID: 1234567890123456 | Reconnecting WS client in 31000ms...
+```
+
+<Warning>
+If you have `reconnectOnDuplicateConnection` set to `true` and receive code 4003 (duplicate connection), the client will attempt to reconnect. This may cause a reconnection loop if you have multiple instances running.
+</Warning>
+
+## Application events
+
+While running, the application processes several types of events:
+
+### Enabled/Disabled events
+
+When Sol's Stat Tracker is enabled or disabled through the Discord bot:
+- An embed is sent to your webhook indicating the status change (index.js:51-64)
+- Console output is not generated for these events
+
+### Webhook execution
+
+When stats are found and need to be posted:
+- The application receives an `executeWebhook` action (index.js:65-71)
+- Your username and avatar overrides are applied if configured
+- The message is sent to your Discord webhook
+- Mentions are disabled for security (index.js:68)
+
+## Stopping the application
+
+To stop the webhook client:
+
+1. Close the console window, or
+2. Press `Ctrl+C` in the terminal
+
+The WebSocket connection will be terminated, and the application will exit.
+
+<Info>
+After stopping, if you configured `verboseLogging: true`, you may see a disconnection message in your Discord channel.
+</Info>

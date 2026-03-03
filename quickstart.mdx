@@ -1,80 +1,165 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Complete setup guide to get Sol's Stat Tracker Webhook running
 ---
 
-## Get started in three steps
+This guide walks you through the complete setup process from generating your API token to running the webhook client.
 
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<Steps>
+  <Step title="Generate an API token">
+    In Discord, use the Sol's Stat Tracker bot to generate an API token:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    ```
+    /generatetoken
+    ```
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    The bot will provide you with a unique API token. Copy this token - you'll need it in the next step.
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    <Warning>
+      Keep your API token private. Anyone with this token can connect to your Sol's Stat Tracker instance.
+    </Warning>
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Configure your API token">
+    Open the `config.js` file in your Sol's Stat Tracker Webhook directory using any text editor.
+    
+    Replace `"PLACE YOUR API TOKEN HERE"` with your actual API token:
+    
+    ```js config.js
+    const config = {
+        // AUTHENTICATION (REQUIRED)
+        "token": "0123456789ABCDEFabcdef0123456789ABCDEFabcdef0123456789ABCDEFabcdef01234567",
+        "webhookURL": "PLACE THE WEBHOOK URL HERE",
+        
+        // ... rest of config
+    };
+    ```
+    
+    <Note>
+      Your API token should be a 72-character hexadecimal string. If it looks different, regenerate it using `/generatetoken`.
+    </Note>
+  </Step>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+  <Step title="Create a Discord webhook">
+    In your Discord server, create a webhook:
+    
+    1. Go to the channel where you want stats to be posted
+    2. Click the channel settings (gear icon)
+    3. Navigate to **Integrations** → **Webhooks**
+    4. Click **New Webhook**
+    5. Copy the webhook URL
+    
+    The webhook URL should look like:
+    ```
+    https://discord.com/api/webhooks/123456789012345678/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcdef
+    ```
+  </Step>
 
-### Step 3: Go live
+  <Step title="Configure your webhook URL">
+    Back in your `config.js` file, replace `"PLACE THE WEBHOOK URL HERE"` with your Discord webhook URL:
+    
+    ```js config.js
+    const config = {
+        // AUTHENTICATION (REQUIRED)
+        "token": "0123456789ABCDEFabcdef0123456789ABCDEFabcdef0123456789ABCDEFabcdef01234567",
+        "webhookURL": "https://discord.com/api/webhooks/123456789012345678/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcdef",
+        
+        // ... rest of config
+    };
+    ```
+    
+    Save the file after making this change.
+  </Step>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+  <Step title="Run the webhook client">
+    Double-click the `run.bat` file in your Sol's Stat Tracker Webhook directory to start the client.
+    
+    You should see console output indicating the connection status:
+    ```
+    ID: 123456789012345678 | WS client connected: wss://api.mongoosee.com/solsstattracker/v2/gateway
+    ```
+    
+    In your Discord channel, you'll see a connection confirmation embed with a green checkmark.
+  </Step>
+
+  <Step title="Test the connection">
+    In Discord, enable or disable your Sol's Stat Tracker to test the webhook:
+    
+    - When enabled, you'll see a success embed (green)
+    - When disabled, you'll see an error embed (red)
+    - Stats will automatically post when detected
+    
+    <Note>
+      If you don't see messages appearing, check the console window for error messages and verify your token and webhook URL are correct.
+    </Note>
+  </Step>
+</Steps>
+
+## Optional customization
+
+You can customize additional settings in `config.js`:
+
+### Webhook appearance
+
+Override the default webhook username and avatar:
+
+```js config.js
+"overrideUsername": "Sol's Stats",
+"overrideAvatarURL": "https://example.com/avatar.png",
+```
+
+### Embed colors
+
+Customize the embed colors for different states:
+
+```js config.js
+"colors": {
+    "success": "#6ab183",  // Green for success states
+    "error": "#d85a4b",    // Red for error states
+    "none": "#777f8d"      // Gray for neutral states
+},
+```
+
+### Verbose logging
+
+Control whether automated events (like connection status) are posted to Discord:
+
+```js config.js
+"verboseLogging": true,  // Set to false to only show user events
+```
+
+<Warning>
+  The advanced configuration section contains gateway URL and reconnection settings. **Do not change these unless you know what you're doing**, as incorrect values can prevent the client from connecting.
+</Warning>
+
+## Troubleshooting
+
+### Connection errors
+
+If you see error code 4001, 4002, or 4004 in the console:
+
+- **4001**: API token is missing - verify you've set the token in `config.js`
+- **4002**: API token is invalid - regenerate using `/generatetoken`
+- **4004**: API token has been deleted - generate a new token
+
+### Duplicate connection (4003)
+
+This error means the API token is already in use by another client. Only one client can be connected per token at a time.
+
+By default, the client won't reconnect on duplicate connection errors. You can change this behavior:
+
+```js config.js
+"reconnectOnDuplicateConnection": true,  // May cause reconnection loop
+```
+
+### Automatic reconnection
+
+The client automatically reconnects with exponential backoff:
+
+- Initial reconnect interval: 31 seconds
+- Maximum reconnect interval: 120 seconds (configurable via `maxReconnectInterval`)
+- Interval doubles after each failed reconnection attempt
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+Learn more about [configuration options](/configuration/authentication) or check out the [troubleshooting guide](/usage/troubleshooting) for common issues.

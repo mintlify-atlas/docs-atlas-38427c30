@@ -1,0 +1,82 @@
+---
+title: Webhook setup
+description: Configure your Discord webhook URL to receive stat notifications
+---
+
+The webhook URL determines where Sol's Stat Tracker posts stat notifications in your Discord server.
+
+## Webhook URL configuration
+
+<ParamField path="webhookURL" type="string" required>
+  The full Discord webhook URL for your target channel. This URL is used by the Discord.js WebhookClient to establish a connection and send messages.
+  
+  **Format:** `https://discord.com/api/webhooks/{webhook_id}/{webhook_token}`
+</ParamField>
+
+## Creating a Discord webhook
+
+1. Open your Discord server and navigate to the channel where you want to receive stat notifications
+2. Click the gear icon next to the channel name to open Channel Settings
+3. Go to **Integrations** in the left sidebar
+4. Click **Webhooks** or **View Webhooks**
+5. Click **New Webhook** or **Create Webhook**
+6. Customize the webhook name and avatar (optional)
+7. Click **Copy Webhook URL**
+8. Paste the URL into your `config.js` file
+
+<CodeGroup>
+```js config.js
+const config = {
+    "token": "YOUR_API_TOKEN_HERE",
+    "webhookURL": "https://discord.com/api/webhooks/123456789012345678/AbCdEfGhIjKlMnOpQrStUvWxYz0123456789abcdef",
+    
+    // ... other options
+};
+```
+</CodeGroup>
+
+## How the webhook works
+
+The application uses Discord.js's `WebhookClient` to communicate with your Discord channel:
+
+1. On startup, a WebhookClient is created using your webhook URL
+2. The client connects to the WebSocket gateway using your API token
+3. When stat events occur, the gateway sends `executeWebhook` actions with message payloads
+4. The webhook client sends these messages as Discord embeds to your channel
+5. Connection status updates (connected, enabled, disabled, reconnecting) are also sent through the webhook
+
+## Webhook message types
+
+Your webhook will receive different types of messages:
+
+### Status messages
+
+These messages inform you about the connection state:
+
+- **Connected** - WebSocket successfully connected to the gateway (shown only if `verboseLogging` is enabled)
+- **Enabled** - Stat tracking has been enabled via the Discord bot
+- **Disabled** - Stat tracking has been disabled via the Discord bot
+- **Reconnecting** - Connection lost, attempting to reconnect (shown only if `verboseLogging` is enabled)
+
+### Stat notifications
+
+When stats are found in-game, the webhook receives formatted embed messages with player statistics. The exact format is determined by the Sol's Stat Tracker service.
+
+## Security features
+
+<Note>
+  The application automatically disables all mentions in webhook messages by setting `allowedMentions: { parse: [] }`. This prevents the webhook from pinging users or roles, even if the payload contains mention syntax.
+</Note>
+
+## Troubleshooting webhook errors
+
+If you see webhook-related errors in the console:
+
+- **Invalid webhook URL** - Verify the URL format is correct and complete
+- **Webhook not found** - The webhook may have been deleted from Discord; create a new one
+- **Missing permissions** - Ensure the webhook has permission to post in the channel
+- **Rate limited** - Discord is rate limiting your webhook; messages will retry automatically
+
+<Warning>
+  If you delete the webhook in Discord while the application is running, you'll need to create a new webhook, update `config.js` with the new URL, and restart the application.
+</Warning>

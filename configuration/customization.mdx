@@ -1,0 +1,196 @@
+---
+title: Customization
+description: Customize colors, emojis, username, and avatar for your webhook messages
+---
+
+You can customize the appearance of webhook messages by configuring colors, emojis, and webhook identity overrides in your `config.js` file.
+
+## Webhook identity
+
+Override the default username and avatar shown when the webhook posts messages to Discord.
+
+<ParamField path="overrideUsername" type="string | null" default="null">
+  Custom username displayed on webhook messages. When set to `null`, the webhook uses the username from the message payload.
+  
+  The override is applied to all messages sent through the webhook, including stat notifications and status updates.
+</ParamField>
+
+<ParamField path="overrideAvatarURL" type="string | null" default="null">
+  Custom avatar image URL displayed on webhook messages. When set to `null`, the webhook uses the avatar URL from the message payload.
+  
+  Must be a valid image URL (e.g., `https://example.com/avatar.png`).
+</ParamField>
+
+### Example configuration
+
+<CodeGroup>
+```js Default (no override)
+const config = {
+    "overrideUsername": null,
+    "overrideAvatarURL": null,
+    // ...
+};
+```
+
+```js Custom identity
+const config = {
+    "overrideUsername": "Sol's Stats",
+    "overrideAvatarURL": "https://i.imgur.com/example.png",
+    // ...
+};
+```
+</CodeGroup>
+
+<Note>
+  When you set an override, it applies to **all** webhook messages, including status updates like "Connected" and "Reconnecting", not just stat notifications.
+</Note>
+
+## Embed colors
+
+Customize the embed border colors for different message types. Colors use hexadecimal format.
+
+<ParamField path="colors.success" type="string" default="#6ab183">
+  Color used for positive status messages, including:
+  - WebSocket connected to gateway
+  - Stat tracking enabled
+  
+  **Default:** `#6ab183` (green)
+</ParamField>
+
+<ParamField path="colors.error" type="string" default="#d85a4b">
+  Color used for error and warning messages, including:
+  - Stat tracking disabled
+  - Authentication errors (missing, invalid, or deleted token)
+  - Duplicate connection errors
+  
+  **Default:** `#d85a4b` (red)
+</ParamField>
+
+<ParamField path="colors.none" type="string" default="#777f8d">
+  Color used for neutral status messages, including:
+  - Reconnecting to gateway
+  
+  **Default:** `#777f8d` (gray)
+</ParamField>
+
+### Example configuration
+
+<CodeGroup>
+```js Default colors
+const config = {
+    "colors": {
+        "success": "#6ab183",
+        "error": "#d85a4b",
+        "none": "#777f8d"
+    },
+    // ...
+};
+```
+
+```js Custom colors
+const config = {
+    "colors": {
+        "success": "#00ff00",  // Bright green
+        "error": "#ff0000",    // Bright red
+        "none": "#888888"     // Light gray
+    },
+    // ...
+};
+```
+</CodeGroup>
+
+<Note>
+  You can use any valid hex color code. Use a color picker tool to find hex codes for your preferred colors.
+</Note>
+
+## Emojis
+
+Customize the emojis displayed in status message embeds. You can use Discord custom emojis or standard Unicode emojis.
+
+<ParamField path="emojis.success" type="string" default="<:green_tick:1365702693326422026>">
+  Emoji displayed in positive status messages (connected, enabled).
+  
+  **Default:** Custom green checkmark emoji
+</ParamField>
+
+<ParamField path="emojis.error" type="string" default="<:red_tick:1365702694727188491>">
+  Emoji displayed in error and warning messages (disabled, authentication errors).
+  
+  **Default:** Custom red X emoji
+</ParamField>
+
+<ParamField path="emojis.none" type="string" default="<:gray_tick:1365702690985738390>">
+  Emoji displayed in neutral status messages (reconnecting).
+  
+  **Default:** Custom gray checkmark emoji
+</ParamField>
+
+### Using custom Discord emojis
+
+To use a custom emoji from your Discord server:
+
+1. Type the emoji in any Discord channel with a backslash: `\:emoji_name:`
+2. Discord will show the full emoji code: `<:emoji_name:123456789012345678>`
+3. Copy this code into your config
+
+### Using Unicode emojis
+
+You can also use standard Unicode emojis:
+
+<CodeGroup>
+```js Unicode emojis
+const config = {
+    "emojis": {
+        "success": "✅",
+        "error": "❌",
+        "none": "⚪"
+    },
+    // ...
+};
+```
+
+```js Custom Discord emojis
+const config = {
+    "emojis": {
+        "success": "<:green_tick:1365702693326422026>",
+        "error": "<:red_tick:1365702694727188491>",
+        "none": "<:gray_tick:1365702690985738390>"
+    },
+    // ...
+};
+```
+</CodeGroup>
+
+<Warning>
+  When using custom Discord emojis, the webhook must have access to those emojis. If the emojis are from a different server where the webhook doesn't exist, they may not display correctly.
+</Warning>
+
+## Complete customization example
+
+<CodeGroup>
+```js config.js
+const config = {
+    // AUTHENTICATION (REQUIRED)
+    "token": "YOUR_API_TOKEN_HERE",
+    "webhookURL": "YOUR_WEBHOOK_URL_HERE",
+
+    // WEBHOOK USER (OPTIONAL)
+    "overrideUsername": "Sol's Stats Bot",
+    "overrideAvatarURL": "https://i.imgur.com/example.png",
+
+    "colors": {
+        "success": "#00ff00",
+        "error": "#ff0000",
+        "none": "#888888"
+    },
+
+    "emojis": {
+        "success": "✅",
+        "error": "❌",
+        "none": "⚪"
+    },
+
+    // ... other configuration
+};
+```
+</CodeGroup>

@@ -1,0 +1,72 @@
+---
+title: Error codes
+description: WebSocket error codes and their meanings
+---
+
+When the WebSocket connection closes, you may receive one of the following error codes. Understanding these codes helps you diagnose authentication and connection issues.
+
+## Error code reference
+
+<ResponseField name="4001" type="Missing Token">
+  The API token was not provided in the WebSocket connection headers.
+  
+  **Behavior:** The connection terminates immediately and does not attempt to reconnect.
+  
+  **Resolution:** Ensure you include the `token` header when establishing the WebSocket connection.
+</ResponseField>
+
+<ResponseField name="4002" type="Invalid Token">
+  The API token provided is not valid or does not exist in the system.
+  
+  **Behavior:** The connection terminates immediately and does not attempt to reconnect.
+  
+  **Resolution:** Verify that your API token is correct and has not expired. You may need to generate a new token.
+</ResponseField>
+
+<ResponseField name="4003" type="Duplicate Connection">
+  The API token is already being used by another active WebSocket connection.
+  
+  **Behavior:** The connection terminates. Reconnection behavior depends on the `reconnectOnDuplicateConnection` configuration:
+  - If enabled, the client will attempt to reconnect
+  - If disabled, the connection terminates without reconnecting
+  
+  **Resolution:** Ensure only one client is connected with the same API token at a time, or enable duplicate connection handling in your configuration.
+</ResponseField>
+
+<ResponseField name="4004" type="Deleted Token">
+  The API token has been deleted from the system.
+  
+  **Behavior:** The connection terminates immediately and does not attempt to reconnect.
+  
+  **Resolution:** Generate a new API token and update your configuration.
+</ResponseField>
+
+## Reconnection behavior
+
+For error codes **4001**, **4002**, and **4004**, the client will not attempt to reconnect as these represent permanent authentication failures.
+
+For error code **4003**, reconnection depends on your `reconnectOnDuplicateConnection` configuration setting.
+
+All other close codes trigger an automatic reconnection attempt with exponential backoff, starting at 31 seconds and doubling up to the `maxReconnectInterval` value.
+
+## Example error handling
+
+The client logs errors to the console when verbose logging is enabled:
+
+```javascript
+// Error code 4001
+"The API token is missing."
+
+// Error code 4002  
+"The API token is invalid."
+
+// Error code 4003
+"The API token is already in-use."
+
+// Error code 4004
+"The API token has been deleted."
+```
+
+<Note>
+  Enable `verboseLogging` in your configuration to receive Discord webhook notifications when these errors occur.
+</Note>

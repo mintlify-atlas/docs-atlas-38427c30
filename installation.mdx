@@ -1,0 +1,62 @@
+---
+title: Installation
+description: Install Node.js and download Sol's Stat Tracker Webhook
+---
+
+Follow these steps to install Sol's Stat Tracker Webhook on your system.
+
+## Prerequisites
+
+You'll need Node.js installed on your system to run this webhook client.
+
+<Note>
+  Node.js 16.x or higher is recommended for compatibility with discord.js v14.
+</Note>
+
+<Steps>
+  <Step title="Install Node.js">
+    Download and install [Node.js](https://nodejs.org/en) from the official website. Choose the LTS (Long Term Support) version for stability.
+    
+    After installation, verify Node.js is installed by opening a terminal and running:
+    ```bash
+    node --version
+    ```
+  </Step>
+
+  <Step title="Download the release">
+    Download the latest release of [Sol's Stat Tracker Webhook](https://github.com/mongoo-se/sols-stat-tracker-webhook/releases) from GitHub.
+    
+    Look for the latest version in the Releases section and download the `.zip` file.
+  </Step>
+
+  <Step title="Extract the files">
+    Unzip the Sol's Stat Tracker Webhook file to a location on your computer where you want to run the application.
+    
+    <Note>
+      Choose a permanent location for the files. You'll need to keep them in this directory for the webhook to continue working.
+    </Note>
+  </Step>
+
+  <Step title="Install dependencies">
+    Navigate to the extracted folder and run the `setup.bat` file to install the required dependencies.
+    
+    This will install the discord.js package and other dependencies specified in `package.json`.
+    
+    <Warning>
+      Make sure you're connected to the internet during this step. The setup script needs to download packages from npm.
+    </Warning>
+  </Step>
+</Steps>
+
+## What gets installed
+
+The `setup.bat` script installs the following dependencies:
+
+- **discord.js** (v14.22.1+) - Discord API wrapper for webhook client functionality
+- **ws** - WebSocket library for connecting to Sol's Stat Tracker gateway
+
+These packages enable the webhook client to connect to the Sol's Stat Tracker API and send formatted embeds to your Discord server.
+
+## Next steps
+
+Once installation is complete, proceed to the [quickstart guide](/quickstart) to configure your API token and Discord webhook.

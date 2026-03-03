@@ -1,0 +1,166 @@
+---
+title: WebSocket events
+description: Events and actions sent through the WebSocket connection
+---
+
+The WebSocket server sends messages with specific actions that the client handles. Each message includes an `action` field that determines how the client processes it.
+
+## Message structure
+
+All messages sent from the server are JSON objects with at least an `action` field:
+
+```json
+{
+  "action": "string",
+  "data": {} // Optional, depends on the action
+}
+```
+
+## Available actions
+
+### enabled
+
+Notifies you that Sol's Stat Tracker has been enabled.
+
+**Payload structure:**
+
+```json
+{
+  "action": "enabled"
+}
+```
+
+**Client behavior:**
+
+When you receive this action, the client sends a success embed to your Discord webhook with the message "Sol's Stat Tracker - Enabled".
+
+<Note>
+  This action indicates that stat tracking is now active and you will begin receiving webhook executions.
+</Note>
+
+---
+
+### disabled
+
+Notifies you that Sol's Stat Tracker has been disabled.
+
+**Payload structure:**
+
+```json
+{
+  "action": "disabled"
+}
+```
+
+**Client behavior:**
+
+When you receive this action, the client sends an error embed to your Discord webhook with the message "Sol's Stat Tracker - Disabled".
+
+<Note>
+  This action indicates that stat tracking has been turned off and you will no longer receive webhook executions until it's re-enabled.
+</Note>
+
+---
+
+### executeWebhook
+
+Instructs you to execute a Discord webhook with the provided data payload.
+
+**Payload structure:**
+
+```json
+{
+  "action": "executeWebhook",
+  "data": {
+    "username": "Display name",
+    "avatarURL": "https://example.com/avatar.png",
+    "embeds": [],
+    "content": "Message content"
+    // Any valid Discord webhook payload fields
+  }
+}
+```
+
+<ParamField path="data" type="object" required>
+  Contains the Discord webhook execution payload. This includes all standard Discord webhook fields.
+</ParamField>
+
+<ParamField path="data.username" type="string">
+  The username to display for the webhook message. Can be overridden by `overrideUsername` in your configuration.
+</ParamField>
+
+<ParamField path="data.avatarURL" type="string">
+  The avatar URL to display for the webhook message. Can be overridden by `overrideAvatarURL` in your configuration.
+</ParamField>
+
+<ParamField path="data.embeds" type="array">
+  Array of Discord embed objects to send with the webhook.
+</ParamField>
+
+<ParamField path="data.content" type="string">
+  Text content of the webhook message.
+</ParamField>
+
+**Client behavior:**
+
+When you receive this action, the client:
+
+1. Applies configuration overrides:
+   - Replaces `username` with `overrideUsername` if configured
+   - Replaces `avatarURL` with `overrideAvatarURL` if configured
+
+2. Enforces security by setting `allowedMentions` to prevent all mentions
+
+3. Executes the Discord webhook with the processed payload
+
+<Warning>
+  The client automatically disables all mentions (`@everyone`, `@here`, role mentions, user mentions) for security reasons. This cannot be overridden.
+</Warning>
+
+**Example payload:**
+
+```json
+{
+  "action": "executeWebhook",
+  "data": {
+    "username": "Sol's RNG",
+    "avatarURL": "https://example.com/sols-avatar.png",
+    "embeds": [
+      {
+        "description": "New breakthrough discovered!",
+        "color": 5814783
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Invalid actions
+
+If you receive a message with an unrecognized action, the client logs an error:
+
+```
+ID: <webhook_id> | WS client invalid action: <action_name>
+```
+
+The message is ignored and the connection remains open.
+
+## Connection lifecycle events
+
+In addition to server actions, the client handles connection lifecycle events:
+
+### Connection established
+
+When the WebSocket connection is successfully established, the client waits 1 second and sends a "Connected" embed to your webhook (if `verboseLogging` is enabled).
+
+### Reconnection
+
+When the connection closes with certain error codes, the client automatically attempts to reconnect with exponential backoff:
+
+- **Initial interval:** 31 seconds
+- **Backoff strategy:** Interval doubles after each failed attempt
+- **Maximum interval:** Defined by `maxReconnectInterval` configuration
+
+See [Error codes](/reference/error-codes) for details on which errors trigger reconnection.
