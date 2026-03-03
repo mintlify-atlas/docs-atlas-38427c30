@@ -1,0 +1,64 @@
+{
+  "projectType": "general",
+  "projectName": "Sol's Stat Tracker Webhook",
+  "projectDescription": "A Node.js application that connects to Sol's Stat Tracker and posts game statistics to Discord via webhooks.",
+  "theme": "almond",
+  "primaryColor": "#6ab183",
+  "lightColor": "#8bc9a1",
+  "darkColor": "#4a9868",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "installation",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Configuration",
+        "pages": [
+          "configuration/authentication",
+          "configuration/webhook-setup",
+          "configuration/customization",
+          "configuration/advanced"
+        ]
+      },
+      {
+        "group": "Usage",
+        "pages": [
+          "usage/running",
+          "usage/troubleshooting"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/error-codes",
+          "reference/websocket-events"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "WebSocket connection to Sol's Stat Tracker API",
+    "Automatic reconnection with exponential backoff",
+    "Discord webhook integration with customizable embeds",
+    "Configurable colors and emojis",
+    "Optional username and avatar overrides",
+    "Verbose logging support"
+  ],
+  "publicApiSurface": [
+    "config.token",
+    "config.webhookURL",
+    "config.overrideUsername",
+    "config.overrideAvatarURL",
+    "config.colors",
+    "config.emojis",
+    "config.gatewayURL",
+    "config.maxReconnectInterval",
+    "config.reconnectOnDuplicateConnection",
+    "config.verboseLogging"
+  ]
+}
